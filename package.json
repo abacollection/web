@@ -1,8 +1,8 @@
 {
-  "name": "@ladjs/web",
-  "description": "Web server for Lad",
+  "name": "@abacollection/web",
+  "description": "Web server for ABA Collection",
   "version": "11.0.1",
-  "author": "Nick Baugh <niftylettuce@gmail.com> (http://niftylettuce.com/)",
+  "author": "Taylor Schley <taylorschley@me.com> ()",
   "ava": {
     "failFast": true,
     "verbose": true
@@ -17,7 +17,8 @@
     ]
   },
   "contributors": [
-    "Nick Baugh <niftylettuce@gmail.com> (http://niftylettuce.com/)"
+    "Nick Baugh <niftylettuce@gmail.com> (http://niftylettuce.com/)",
+    "Taylor Schley <taylorschley@me.com> ()"
   ],
   "dependencies": {
     "@hapi/boom": "^9.1.1",
@@ -90,7 +91,7 @@
   "files": [
     "index.js"
   ],
-  "homepage": "https://github.com/ladjs/web",
+  "homepage": "https://github.com/abacollection/web",
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged && npm test",
@@ -126,7 +127,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ladjs/web"
+    "url": "https://github.com/abacollection/web"
   },
   "scripts": {
     "ava": "cross-env NODE_ENV=test ava",
@@ -145,5 +146,8 @@
     "ignores": [
       "config.js"
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
