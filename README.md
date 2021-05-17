@@ -41,14 +41,14 @@ See <https://github.com/ladjs/lad/blob/master/template/web.js> for the most up t
 ## Contributors
 
 | Name              | Website                    |
-| --------------    | -------------------------- |
+| ----------------- | -------------------------- |
 | **Nick Baugh**    | <http://niftylettuce.com/> |
 | **Taylor Schley** |                            |
 
 
 ## License
 
-[MIT](LICENSE) © [Nick Baugh](http://niftylettuce.com/)
+[MIT](LICENSE) © Taylor Schley
 
 
 ##

@@ -108,7 +108,9 @@ class Web {
       methodOverride: [
         (request) => {
           const { _method } = request.body;
-          if (_method && typeof _method === 'string') return _method;
+          if (_method && typeof _method === 'string') {
+            return _method;
+          }
         }
       ],
 
@@ -120,7 +122,11 @@ class Web {
                 connectSrc: defaultSrc,
                 fontSrc: defaultSrc,
                 imgSrc: defaultSrc,
-                styleSrc: [...defaultSrc, "'unsafe-inline'"],
+                styleSrc: [
+                  ...defaultSrc,
+                  'https://www.googletagmanager.com',
+                  "'unsafe-inline'"
+                ],
                 scriptSrc: [...defaultSrc, "'unsafe-inline'"],
                 reportUri: reportUri ? reportUri : null
               }
@@ -135,9 +141,9 @@ class Web {
         // <https://hstspreload.org/>
         // <https://helmetjs.github.io/docs/hsts/#preloading-hsts-in-chrome>
         hsts: {
-          // must be at least 1 year to be approved
+          // Must be at least 1 year to be approved
           maxAge: ms('1y') / 1000,
-          // must be enabled to be approved
+          // Must be enabled to be approved
           includeSubDomains: true,
           preload: true
         },
@@ -169,72 +175,80 @@ class Web {
       ...this.config.cabin
     });
 
-    // initialize the app
+    // Initialize the app
     const app = new Koa();
 
-    // listen for error and log events emitted by app
-    app.on('error', (err, ctx) => {
-      const level = err.status && err.status < 500 ? 'warn' : 'error';
-      if (ctx.logger) ctx.logger[level](err);
-      else cabin[level](err);
+    // Listen for error and log events emitted by app
+    app.on('error', (error, ctx) => {
+      const level = error.status && error.status < 500 ? 'warn' : 'error';
+      if (ctx.logger) {
+        ctx.logger[level](error);
+      } else {
+        cabin[level](error);
+      }
     });
     app.on('log', cabin.log);
 
-    // initialize redis
+    // Initialize redis
     const client = new Redis(
       this.config.redis,
       cabin,
       this.config.redisMonitor
     );
 
-    // allow middleware to access redis client
+    // Allow middleware to access redis client
     app.context.client = client;
 
-    // override koa's undocumented error handler
+    // Override koa's undocumented error handler
     app.context.onerror = errorHandler(this.config.cookiesKey, cabin);
 
-    // only trust proxy if enabled
+    // Only trust proxy if enabled
     app.proxy = boolean(process.env.TRUST_PROXY);
 
-    // inherit cache variable for cache-pug-templates
+    // Inherit cache variable for cache-pug-templates
     app.cache = boolean(this.config.views.locals.cache);
 
-    // adds request received hrtime and date symbols to request object
+    // Adds request received hrtime and date symbols to request object
     // (which is used by Cabin internally to add `request.timestamp` to logs
     app.use(requestReceived);
 
-    // configure timeout
+    // Configure timeout
     if (this.config.timeout) {
       const timeout = new Timeout(this.config.timeout);
       app.use(timeout.middleware);
     }
 
-    // adds `X-Response-Time` header to responses
+    // Adds `X-Response-Time` header to responses
     app.use(koaConnect(responseTime()));
 
-    // adds or re-uses `X-Request-Id` header
+    // Adds or re-uses `X-Request-Id` header
     app.use(koaConnect(requestId()));
 
-    // add cabin middleware
+    // Add cabin middleware
     app.use(cabin.middleware);
 
-    // allow before hooks to get setup
-    if (_.isFunction(this.config.hookBeforeSetup))
+    // Allow before hooks to get setup
+    if (_.isFunction(this.config.hookBeforeSetup)) {
       this.config.hookBeforeSetup(app);
+    }
 
-    // basic auth
-    if (this.config.auth) app.use(auth(this.config.auth));
+    // Basic auth
+    if (this.config.auth) {
+      app.use(auth(this.config.auth));
+    }
 
-    // rate limiting
+    // Rate limiting
     if (this.config.rateLimit) {
       app.use((ctx, next) => {
-        // check against ignored/whitelisted paths
+        // Check against ignored/whitelisted paths
         if (
           Array.isArray(this.config.rateLimitIgnoredGlobs) &&
           this.config.rateLimitIgnoredGlobs.length > 0
         ) {
           const match = multimatch(ctx.path, this.config.rateLimitIgnoredGlobs);
-          if (Array.isArray(match) && match.length > 0) return next();
+          if (Array.isArray(match) && match.length > 0) {
+            return next();
+          }
         }
 
         return ratelimit({
@@ -244,57 +258,67 @@ class Web {
       });
     }
 
-    // remove trailing slashes
+    // Remove trailing slashes
     app.use(removeTrailingSlashes());
 
-    // security
+    // Security
     // (needs to come before i18n so HSTS header gets added)
-    if (this.config.helmet) app.use(helmet(this.config.helmet));
+    if (this.config.helmet) {
+      app.use(helmet(this.config.helmet));
+    }
 
-    // i18n
+    // I18n
     if (this.config.i18n) {
-      // create new @ladjs/i18n instance
+      // Create new @ladjs/i18n instance
       const i18n = this.config.i18n.config
         ? this.config.i18n
         : new I18N({ ...this.config.i18n, logger: cabin });
 
-      // setup localization (must come before `i18n.redirect`)
+      // Setup localization (must come before `i18n.redirect`)
       app.use(i18n.middleware);
 
-      // detect or redirect based off locale url
+      // Detect or redirect based off locale url
       app.use(i18n.redirect);
     }
 
-    // conditional-get
+    // Conditional-get
     app.use(conditional());
 
-    // etag
+    // Etag
     app.use(etag());
 
-    // cors
-    if (this.config.cors) app.use(cors(this.config.cors));
+    // Cors
+    if (this.config.cors) {
+      app.use(cors(this.config.cors));
+    }
 
-    // compress/gzip
-    if (this.config.compress) app.use(compress(this.config.compress));
+    // Compress/gzip
+    if (this.config.compress) {
+      app.use(compress(this.config.compress));
+    }
 
-    // cache support
-    if (this.config.koaCash) app.use(koaCash(this.config.koaCash));
+    // Cache support
+    if (this.config.koaCash) {
+      app.use(koaCash(this.config.koaCash));
+    }
 
-    // cache responses
+    // Cache responses
     if (this.config.cacheResponses) {
       this.cacheResponses = new CacheResponses(this.config.cacheResponses);
       app.use(this.cacheResponses.middleware);
     }
 
-    // favicons
-    if (this.config.favicon)
+    // Favicons
+    if (this.config.favicon) {
       app.use(favicon(this.config.favicon.path, this.config.favicon.options));
+    }
 
-    // serve static assets
-    if (this.config.buildDir && this.config.serveStatic)
+    // Serve static assets
+    if (this.config.buildDir && this.config.serveStatic) {
       app.use(serveStatic(this.config.buildDir, this.config.serveStatic));
+    }
 
-    // set template rendering engine
+    // Set template rendering engine
     app.use(
       views(
         this.config.views.root,
@@ -302,7 +326,7 @@ class Web {
       )
     );
 
-    // ajax request detection (sets `ctx.state.xhr` boolean)
+    // Ajax request detection (sets `ctx.state.xhr` boolean)
     app.use(isajax());
 
     //
@@ -315,11 +339,11 @@ class Web {
       app.use(meta.middleware);
     }
 
-    // add dynamic view helpers
+    // Add dynamic view helpers
     const stateHelper = new StateHelper(this.config.views.locals);
     app.use(stateHelper.middleware);
 
-    // session store
+    // Session store
     app.keys = this.config.sessionKeys;
     app.use(
       session({
@@ -331,25 +355,26 @@ class Web {
       })
     );
 
-    // redirect loop (must come after sessions added)
+    // Redirect loop (must come after sessions added)
     if (this.config.redirectLoop) {
       const redirectLoop = new RedirectLoop(this.config.redirectLoop);
       app.use(redirectLoop.middleware);
     }
 
-    // flash messages (must come after sessions added)
+    // Flash messages (must come after sessions added)
     app.use(flash());
 
-    // body parser
+    // Body parser
     app.use(bodyParser());
 
-    // pretty-printed json responses
+    // Pretty-printed json responses
     app.use(json());
 
-    // method override
+    // Method override
     // (e.g. `<input type="hidden" name="_method" value="PUT" />`)
-    if (this.config.methodOverride)
+    if (this.config.methodOverride) {
       app.use(methodOverride(...this.config.methodOverride));
+    }
 
     // TODO: move this into `@ladjs/csrf`
     // csrf (with added localization support)
@@ -359,13 +384,15 @@ class Web {
         invalidTokenMessage: (ctx) => ctx.request.t('Invalid CSRF token')
       });
       app.use(async (ctx, next) => {
-        // check against ignored/whitelisted redirect middleware paths
+        // Check against ignored/whitelisted redirect middleware paths
         if (
           Array.isArray(this.config.csrfIgnoredGlobs) &&
           this.config.csrfIgnoredGlobs.length > 0
         ) {
           const match = multimatch(ctx.path, this.config.csrfIgnoredGlobs);
-          if (Array.isArray(match) && match.length > 0) return next();
+          if (Array.isArray(match) && match.length > 0) {
+            return next();
+          }
         }
 
         try {
@@ -374,7 +401,9 @@ class Web {
           let error = err;
           if (err.name && err.name === 'ForbiddenError') {
             error = Boom.forbidden(err.message);
-            if (err.stack) error.stack = err.stack;
+            if (err.stack) {
+              error.stack = err.stack;
+            }
           }
 
           ctx.throw(error);
@@ -382,13 +411,13 @@ class Web {
       });
     }
 
-    // passport
+    // Passport
     if (this.config.passport) {
       app.use(this.config.passport.initialize());
       app.use(this.config.passport.session());
     }
 
-    // store the user's last ip address in the background
+    // Store the user's last ip address in the background
     if (this.config.storeIPAddress) {
       const storeIPAddress = new StoreIPAddress({
         logger: cabin,
@@ -400,29 +429,32 @@ class Web {
     // 404 handler
     app.use(koa404Handler);
 
-    // allow before hooks to get setup
-    if (_.isFunction(this.config.hookBeforeRoutes))
+    // Allow before hooks to get setup
+    if (_.isFunction(this.config.hookBeforeRoutes)) {
       this.config.hookBeforeRoutes(app);
-
-    // mount the app's defined and nested routes
-    if (this.config.routes) {
-      if (_.isFunction(this.config.routes.routes))
-        app.use(this.config.routes.routes());
-      else app.use(this.config.routes);
     }
 
-    // start server on either http or http2
+    // Mount the app's defined and nested routes
+    if (this.config.routes) {
+      if (_.isFunction(this.config.routes.routes)) {
+        app.use(this.config.routes.routes());
+      } else {
+        app.use(this.config.routes);
+      }
+    }
+
+    // Start server on either http or http2
     const server =
       this.config.protocol === 'https'
         ? http2.createSecureServer(this.config.ssl, app.callback())
         : http.createServer(app.callback());
 
-    // expose app, server, client
+    // Expose app, server, client
     this.app = app;
     this.server = server;
     this.client = client;
 
-    // bind listen/close to this
+    // Bind listen/close to this
     this.listen = this.listen.bind(this);
     this.close = this.close.bind(this);
   }
