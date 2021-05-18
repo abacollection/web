@@ -119,15 +119,15 @@ class Web {
           ? {
               directives: {
                 defaultSrc,
-                connectSrc: defaultSrc,
+                connectSrc: [...defaultSrc, 'https://www.google-analytics.com'],
                 fontSrc: defaultSrc,
                 imgSrc: defaultSrc,
-                styleSrc: [
+                styleSrc: [...defaultSrc, "'unsafe-inline'"],
+                scriptSrc: [
                   ...defaultSrc,
                   'https://www.googletagmanager.com',
                   "'unsafe-inline'"
                 ],
-                scriptSrc: [...defaultSrc, "'unsafe-inline'"],
                 reportUri: reportUri ? reportUri : null
               }
             }
