@@ -1,7 +1,7 @@
 {
   "name": "@abacollection/web",
   "description": "Web server for ABA Collection",
-  "version": "11.2.1",
+  "version": "11.3.0",
   "author": "Taylor Schley <taylorschley@me.com> ()",
   "ava": {
     "failFast": true,
