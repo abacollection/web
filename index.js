@@ -126,6 +126,7 @@ class Web {
                 scriptSrc: [
                   ...defaultSrc,
                   'https://www.googletagmanager.com',
+                  'https://unpkg.com',
                   "'unsafe-inline'"
                 ],
                 reportUri: reportUri ? reportUri : null
